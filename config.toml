@@ -1,0 +1,29 @@
+# Configuration de la chaîne. Modifie librement.
+
+[channel]
+name = "Data en 60s"
+handle = "@dataen60s"          # ton identifiant YouTube / TikTok
+langue = "fr"
+concept = """Chaîne francophone de Shorts data : chaque vidéo raconte une statistique réelle et surprenante
+à partir de données publiques (Banque mondiale), avec un graphique animé. Angle privilégié : comparer la France,
+l'Afrique de l'Ouest (Côte d'Ivoire, Sénégal, Mali, Burkina Faso, Ghana, Nigeria...) et le reste du monde.
+Ton : curieux, direct, accessible, jamais moralisateur. Pas de conseil santé ni financier."""
+
+[gemini]
+model = "gemini-flash-latest"   # change si Google renomme ses modèles (ex: "gemini-2.5-flash")
+
+[voix]
+moteur = "edge"                 # "edge" (voix de synthèse gratuite) ou "manuel" (tu déposes voice.mp3)
+voix_edge = "fr-FR-HenriNeural" # autres : fr-FR-DeniseNeural, fr-FR-RemyMultilingualNeural
+vitesse = "+8%"
+
+[video]
+fps = 30
+mots_min = 170                  # environ 65 s de voix : au-dessus de 1 min pour TikTok Creator Rewards
+mots_max = 200
+musique = ""                    # chemin optionnel vers un mp3 libre de droits (ex: bibliothèque audio YouTube)
+volume_musique = 0.08
+
+[youtube]
+categorie = "27"                # 27 = Éducation
+visibilite = "private"          # private : tu vérifies dans YouTube Studio avant de publier

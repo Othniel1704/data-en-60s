@@ -1,0 +1,184 @@
+[
+  {
+    "slug": "esperance-vie-france-afrique-ouest",
+    "titre": "L'écart d'espérance de vie qui rétrécit",
+    "accroche": "Combien d'années de vie séparent la France du Ghana ?",
+    "angle": "Montrer la progression rapide de l'Afrique de l'Ouest face aux pays développés depuis 1960.",
+    "indicateur": "SP.DYN.LE00.IN",
+    "pays": [
+      "FRA",
+      "GHA",
+      "SEN",
+      "CIV"
+    ],
+    "debut": 1960,
+    "fin": 2022,
+    "graphique": "line",
+    "unite": "ans"
+  },
+  {
+    "slug": "smartphone-internet-boom-afrique",
+    "titre": "La révolution Internet en Afrique de l'Ouest",
+    "accroche": "Le Sénégal est-il plus connecté que la France ?",
+    "angle": "Révéler la vitesse fulgurante de l'adoption du web mobile dans les hubs ouest-africains.",
+    "indicateur": "IT.NET.USER.ZS",
+    "pays": [
+      "FRA",
+      "NGA",
+      "GHA",
+      "SEN",
+      "MLI"
+    ],
+    "debut": 2000,
+    "fin": 2022,
+    "graphique": "bar_race",
+    "unite": "% de la population"
+  },
+  {
+    "slug": "demographie-jeunesse-monde",
+    "titre": "Le choc des jeunesses mondiales",
+    "accroche": "Quel pays a la population la plus jeune du monde ?",
+    "angle": "Mettre en opposition la pyramide des âges vieillissante de la France et ultra-jeune du Niger ou du Mali.",
+    "indicateur": "SP.POP.0014.TO.ZS",
+    "pays": [
+      "FRA",
+      "NER",
+      "MLI",
+      "JPN",
+      "DEU",
+      "NGA"
+    ],
+    "debut": 1990,
+    "fin": 2023,
+    "graphique": "bar_race",
+    "unite": "% de moins de 15 ans"
+  },
+  {
+    "slug": "electricite-acces-universel",
+    "titre": "La course à la lumière",
+    "accroche": "Qui a branché son réseau le plus vite ?",
+    "angle": "Suivre la trajectoire spectaculaire du Ghana vers l'accès universel à l'électricité.",
+    "indicateur": "EG.ELC.ACCS.ZS",
+    "pays": [
+      "FRA",
+      "GHA",
+      "CIV",
+      "NGA",
+      "BFA"
+    ],
+    "debut": 2000,
+    "fin": 2021,
+    "graphique": "line",
+    "unite": "% de la population"
+  },
+  {
+    "slug": "urbanisation-megapoles-ouest-africaines",
+    "titre": "L'exode urbain géant",
+    "accroche": "La France est-elle plus urbanisée que le Nigeria ?",
+    "angle": "Casser les clichés sur la ruralité en Afrique de l'Ouest face à des métropoles comme Lagos.",
+    "indicateur": "SP.URB.TOTL.IN.ZS",
+    "pays": [
+      "FRA",
+      "NGA",
+      "CIV",
+      "SEN",
+      "GBR"
+    ],
+    "debut": 1970,
+    "fin": 2023,
+    "graphique": "line",
+    "unite": "% de la population urbaine"
+  },
+  {
+    "slug": "pib-par-habitant-comparaison",
+    "titre": "La vraie mesure de la richesse",
+    "accroche": "Combien pèse un habitant en termes de PIB ?",
+    "angle": "Visualiser l'écart abyssal mais en mutation du PIB par habitant entre l'Europe et l'Afrique de l'Ouest.",
+    "indicateur": "NY.GDP.PCAP.CD",
+    "pays": [
+      "FRA",
+      "USA",
+      "GHA",
+      "CIV",
+      "SEN",
+      "NGA"
+    ],
+    "debut": 1980,
+    "fin": 2023,
+    "graphique": "bar_race",
+    "unite": "$ courants"
+  },
+  {
+    "slug": "scolarisation-secondaire-boom",
+    "titre": "Sur les bancs de l'école au XXIe siècle",
+    "accroche": "Où le taux de scolarisation a-t-il le plus explosé ?",
+    "angle": "Montrer l'investissement massif dans l'éducation secondaire au Ghana et au Sénégal.",
+    "indicateur": "SE.SEC.ENRR",
+    "pays": [
+      "FRA",
+      "GHA",
+      "SEN",
+      "MLI",
+      "BFA"
+    ],
+    "debut": 1990,
+    "fin": 2022,
+    "graphique": "line",
+    "unite": "% brut de scolarisation"
+  },
+  {
+    "slug": "co2-emissions-par-habitant",
+    "titre": "Qui pollue vraiment par habitant ?",
+    "accroche": "Le grand fossé des émissions de carbone.",
+    "angle": "Comparer la très faible empreinte carbone individuelle ouest-africaine face aux géants occidentaux et asiatiques.",
+    "indicateur": "EN.ATM.CO2E.PC",
+    "pays": [
+      "FRA",
+      "USA",
+      "CHN",
+      "NGA",
+      "GHA",
+      "MLI"
+    ],
+    "debut": 1990,
+    "fin": 2020,
+    "graphique": "bar_race",
+    "unite": "tonnes par habitant"
+  },
+  {
+    "slug": "agriculteurs-population-active",
+    "titre": "La terre nourricière d'hier et d'aujourd'hui",
+    "accroche": "Combien de personnes travaillent encore la terre ?",
+    "angle": "L'évolution de la part de l'emploi agricole en France comparée au Mali ou au Burkina Faso.",
+    "indicateur": "SL.AGR.EMPL.ZS",
+    "pays": [
+      "FRA",
+      "MLI",
+      "BFA",
+      "CIV",
+      "USA"
+    ],
+    "debut": 1991,
+    "fin": 2023,
+    "graphique": "line",
+    "unite": "% de l'emploi total"
+  },
+  {
+    "slug": "telephonie-mobile-revolution",
+    "titre": "Quand le fixe n'a jamais existé",
+    "accroche": "Plus de cartes SIM que d'habitants ?",
+    "angle": "Démontrer comment l'Afrique de l'Ouest a sauté la case téléphone fixe pour passer directement au mobile.",
+    "indicateur": "IT.CEL.SETS.P2",
+    "pays": [
+      "FRA",
+      "CIV",
+      "SEN",
+      "NGA",
+      "GHA"
+    ],
+    "debut": 2000,
+    "fin": 2022,
+    "graphique": "bar_race",
+    "unite": "abonnements pour 100 habitants"
+  }
+]
