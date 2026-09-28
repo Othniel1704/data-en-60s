@@ -74,7 +74,7 @@ def chunk_words(words, max_words=3, max_chars=22):
             or nxt is None
         )
         if cut:
-            chunks.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": text})
+            chunks.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": text, "words": list(cur)})
             cur = []
     # chaque sous-titre reste affiché jusqu'au suivant
     for a, b in zip(chunks, chunks[1:]):

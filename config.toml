@@ -19,8 +19,8 @@ vitesse = "+8%"
 
 [video]
 fps = 30
-mots_min = 170                  # environ 65 s de voix : au-dessus de 1 min pour TikTok Creator Rewards
-mots_max = 200
+mots_min = 95                   # 95 à 120 mots = 35 à 45 s : la durée qui retient le mieux pour grandir
+mots_max = 120                  # plus tard, pour les revenus TikTok : 170 à 200 mots (plus d'1 minute)
 musique = ""                    # chemin optionnel vers un mp3 libre de droits (ex: bibliothèque audio YouTube)
 volume_musique = 0.08
 

@@ -14,7 +14,6 @@ Commandes (dans l'ordre d'un projet) :
 """
 import argparse
 import datetime as dt
-import json
 import sys
 
 from ds import core
@@ -39,7 +38,8 @@ def cmd_ideas(args, cfg):
     out = IDEAS / f"idees_{dt.datetime.now():%Y%m%d_%H%M}.json"
     write_json(out, ideas)
     for i, idea in enumerate(ideas, 1):
-        print(f"{i:>2}. [{idea['graphique']:8}] {idea['titre']}\n     {idea['accroche']}  ({idea['indicateur']}, {', '.join(idea['pays'])})")
+        print(f"{i:>2}. [{idea.get('format', idea['graphique']):10}] {idea['titre']}\n"
+              f"     « {idea['accroche']} »  ({idea['indicateur']}, {', '.join(idea['pays'])})")
     print(f"\nEnregistré dans {out.name}. Choisis : python main.py new <slug> --idea N")
 
 
@@ -59,9 +59,9 @@ def cmd_new(args, cfg):
     else:
         idea = read_json(latest_ideas_file())[args.idea - 1]
         print(f"Téléchargement : {idea['indicateur']} pour {', '.join(idea['pays'])}...")
-        name, n = fetch_worldbank(idea["indicateur"], idea["pays"], idea["debut"], idea["fin"], d / "data.csv")
+        name, n, codes = fetch_worldbank(idea["indicateur"], idea["pays"], idea["debut"], idea["fin"], d / "data.csv")
         print(f"  {n} valeurs : {name}")
-        chart = {**idea, "indicateur_nom": name, "source": "Banque mondiale"}
+        chart = {**idea, "indicateur_nom": name, "source": "Banque mondiale", "iso2": codes}
     write_json(d / "chart.json", chart)
     series = load_series(d / "data.csv")
     print(f"Séries : {', '.join(series)}")
@@ -69,27 +69,60 @@ def cmd_new(args, cfg):
     print(f"Projet prêt. Suite : python main.py script {args.slug}")
 
 
+def _clean(obj):
+    """Retire les tirets cadratins de tous les textes générés."""
+    if isinstance(obj, str):
+        return obj.replace(" \u2014 ", ", ").replace("\u2014", ", ")
+    if isinstance(obj, list):
+        return [_clean(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    return obj
+
+
+def check_moments(script):
+    """Garde uniquement les repères dont le mot existe vraiment dans la narration."""
+    from ds.countries import norm
+
+    mots = {norm(w) for w in script["narration"].split()}
+    ok, rejetes = [], []
+    for m in script.get("moments") or []:
+        (ok if m.get("mot") and norm(str(m["mot"])).split()[:1] and norm(str(m["mot"])).split()[0] in mots
+         else rejetes).append(m)
+    script["moments"] = ok
+    return rejetes
+
+
 def cmd_script(args, cfg):
+    from ds.countries import display_name
     from ds.data import load_series, summarize
     from ds.gemini import SCRIPT_PROMPT, ask_json
 
     require_step(args.slug, "donnees", "script_a_valider")
     d = project_dir(args.slug)
     chart = read_json(d / "chart.json")
-    resume = summarize(load_series(d / "data.csv"), chart.get("unite", ""))
+    series = load_series(d / "data.csv")
+    resume = summarize({display_name(k, chart): v for k, v in series.items()}, chart.get("unite", ""))
     prompt = SCRIPT_PROMPT.format(
         chaine=cfg["channel"]["name"], concept=cfg["channel"]["concept"], titre=chart["titre"],
-        angle=chart.get("angle", ""), indicateur_nom=chart.get("indicateur_nom", ""), resume=resume,
+        format=chart.get("format", chart.get("graphique", "")), angle=chart.get("angle", ""),
+        accroche=chart.get("accroche", ""), indicateur_nom=chart.get("indicateur_nom", ""), resume=resume,
         mots_min=cfg["video"]["mots_min"], mots_max=cfg["video"]["mots_max"])
-    script = ask_json(prompt, cfg["gemini"]["model"])
-    script["narration"] = script["narration"].replace("—", ",")
+    script = _clean(ask_json(prompt, cfg["gemini"]["model"]))
+    rejetes = check_moments(script)
     write_json(d / "script.json", script)
     (d / "donnees_resume.txt").write_text(resume, encoding="utf-8")
     set_step(args.slug, "script_a_valider")
     nb = len(script["narration"].split())
-    print(f"\n{script['texte_ecran']}\n\n{script['narration']}\n\n({nb} mots, environ {nb / 2.7:.0f} s)")
+    print(f"\nÉCRAN : {script['texte_ecran']}\n\n{script['narration']}\n\n({nb} mots, environ {nb / 2.7:.0f} s)")
+    for m in script["moments"]:
+        extra = f"  -> encadré « {m['texte']} »" if m.get("texte") else ""
+        print(f"  repère : au mot « {m['mot']} », graphique en {m.get('annee')}{extra}")
+    if rejetes:
+        print(f"  ({len(rejetes)} repère(s) ignoré(s) : leur mot n'est pas dans la narration)")
     print(f"\nÀ TOI : relis et modifie projects/{args.slug}/script.json (vérifie les chiffres avec donnees_resume.txt),")
-    print(f"ajoute ta touche perso, puis : python main.py approve {args.slug}")
+    print("ajoute ta touche perso. Si tu changes un mot utilisé dans « moments », change-le aussi là.")
+    print(f"Puis : python main.py approve {args.slug}")
 
 
 def cmd_approve(args, cfg):
@@ -97,6 +130,14 @@ def cmd_approve(args, cfg):
     nxt = {"script_a_valider": "script_valide", "video_a_valider": "pret_a_publier"}.get(step)
     if not nxt:
         raise SystemExit(f"Rien à valider pour {args.slug} (étape : {step}).")
+    if step == "script_a_valider":
+        d = project_dir(args.slug)
+        script = read_json(d / "script.json")
+        rejetes = check_moments(script)
+        if rejetes:
+            write_json(d / "script.json", script)
+            print(f"  Attention : repère(s) retiré(s) car leur mot n'est plus dans la narration : "
+                  f"{', '.join(str(m.get('mot')) for m in rejetes)}")
     set_step(args.slug, nxt)
     print(f"{args.slug} : {step} -> {nxt}")
 
@@ -117,13 +158,21 @@ def cmd_voice(args, cfg):
         generate_edge(script["narration"], vcfg["voix_edge"], vcfg["vitesse"], d / "voice.mp3", d / "words.json")
     dur = audio_duration(d / "voice.mp3")
     set_step(args.slug, "voix_ok")
-    print(f"Voix OK : {dur:.1f} s" + ("  (attention : moins d'1 minute, pas éligible TikTok Rewards)" if dur < 61 else ""))
+    if dur < 25:
+        note = "  (très court : vise 35 à 45 s)"
+    elif dur <= 50:
+        note = "  (format court : idéal pour grandir)"
+    elif dur < 61:
+        note = "  (un peu long pour un format court, trop court pour TikTok Rewards)"
+    else:
+        note = "  (plus d'1 minute : éligible TikTok Rewards, mais rétention plus difficile)"
+    print(f"Voix OK : {dur:.1f} s{note}")
 
 
 def cmd_render(args, cfg):
     from ds.data import load_series
     from ds.render import render
-    from ds.voice import audio_duration, chunk_words
+    from ds.voice import audio_duration
 
     require_step(args.slug, "voix_ok", "video_a_valider", "pret_a_publier")
     d = project_dir(args.slug)
@@ -132,10 +181,16 @@ def cmd_render(args, cfg):
     out = d / ("apercu.mp4" if args.preview else "final.mp4")
     dur = audio_duration(d / "voice.mp3")
     print(f"Rendu {'aperçu' if args.preview else 'final'} ({dur + 2:.0f} s de vidéo)...")
-    render(load_series(d / "data.csv"), script, chart, chunk_words(words), d / "voice.mp3", dur, out,
+    info = render(load_series(d / "data.csv"), script, chart, words, d / "voice.mp3", dur, out,
            None if args.preview else d / "miniature.jpg", cfg["channel"]["handle"], fps=cfg["video"]["fps"],
            preview=args.preview, music=cfg["video"].get("musique") or None,
            music_volume=cfg["video"].get("volume_musique", 0.08))
+    moments_ok = len(info["highlights"])
+    print(f"  Accroche : {info['hook']:.1f} s | synchronisation : {len(info['keys'])} repères | "
+          f"encadrés : {moments_ok} | mises en avant de pays : {info['focus']}")
+    if script.get("moments") and moments_ok < len([m for m in script["moments"] if m.get("texte")]):
+        print("  Attention : certains « moments » n'ont pas été trouvés (leur « mot » doit être écrit exactement "
+              "comme dans la narration).")
     if not args.preview:
         set_step(args.slug, "video_a_valider")
         print(f"Vidéo : {out}\nÀ TOI : regarde-la en entier, puis : python main.py approve {args.slug}")

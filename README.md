@@ -37,6 +37,40 @@ Astuce : `python main.py render <slug> --preview` fait un aperçu rapide en bass
 
 **Produire par lots** : une soirée par semaine, prépare 5 projets jusqu'à `approve`, lance les `make`, puis programme les uploads sur la semaine avec `--publish-at`.
 
+## Le format v2 (pensé pour la rétention)
+
+Ce que fait chaque vidéo, d'après ce qui marche sur Shorts et TikTok en 2026 :
+
+| Règle | Ce que fait le système |
+|---|---|
+| La 1re seconde décide du swipe | L'accroche (`texte_ecran`) s'affiche en géant dès la 1re image, chiffres en jaune, puis glisse en titre |
+| Un changement visuel toutes les 1,5 à 2 s | Caméra qui suit les courbes, pays mis en avant quand la voix les cite, encadrés, badge d'écart qui pulse |
+| 60 à 80 % des vues démarrent sans le son | Sous-titres karaoké de 2 à 3 mots, le mot prononcé en jaune |
+| Ce qu'on voit = ce qu'on entend | Le graphique avance quand la voix cite une année ou un « moment » |
+| La relecture compte comme une vue partielle | Pas d'écran de fin : la dernière image redevient la première (boucle) |
+| 30 à 45 s retiennent le mieux | Scripts de 95 à 120 mots (réglable dans `config.toml`) |
+
+### Les champs du script qui pilotent la vidéo
+
+```json
+"texte_ecran": "30 ans de vie en moins. Et aujourd'hui ?",
+"sous_titre": "Espérance de vie à la naissance, 1960-2022",
+"moments": [
+  {"mot": "regarde", "annee": 1960},
+  {"mot": "bloque", "annee": 1980, "annee_fin": 2000, "serie": "Côte d'Ivoire", "texte": "20 ans bloquée à 51 ans"},
+  {"mot": "2022", "annee": 2022}
+],
+"ecart": ["France", "Sénégal"]
+```
+
+- `moments` : au mot `mot` (écrit exactement comme dans la narration), le graphique atteint `annee`. Si l'année est déjà passée, le point est mis en valeur. `texte` ajoute un encadré jaune, `annee_fin` surligne une période.
+- Sans `moments`, le graphique suit automatiquement les années prononcées par la voix.
+- `ecart` : badge qui affiche en direct l'écart entre deux pays.
+
+Si tu modifies la narration, garde les mots utilisés dans `moments` (sinon `approve` retire le repère et te prévient).
+
+Drapeaux : téléchargés automatiquement une fois (flagcdn.com) puis gardés dans `ds/cache/flags`. Police : Montserrat (licence libre OFL, dans `ds/fonts`). Effets sonores : générés par le code, sans droits.
+
 ## Tes propres données (encore plus original)
 
 Tout CSV au format `label,x,value` fonctionne (INSEE, Eurostat, data.gouv.fr, Kaggle, tes propres relevés) :
@@ -74,7 +108,10 @@ config.toml        réglages de la chaîne
 ds/data.py         Banque mondiale + CSV + résumé chiffré
 ds/gemini.py       prompts idées et scripts
 ds/voice.py        Edge-TTS, voix manuelle, sous-titres
-ds/render.py       graphiques animés + FFmpeg
+ds/render.py       graphiques animés, accroche, sous-titres karaoké, synchronisation + FFmpeg
+ds/countries.py    noms de pays en français, drapeaux, couleurs
+ds/sfx.py          effets sonores générés
+ds/fonts/          police Montserrat (OFL)
 ds/youtube.py      upload
 projects/<slug>/   un dossier par vidéo (données, script, voix, final.mp4, miniature.jpg)
 ```

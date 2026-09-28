@@ -19,8 +19,9 @@ def fetch_worldbank(indicator, countries, start, end, out_csv):
     payload = r.json()
     if not isinstance(payload, list) or len(payload) < 2 or not payload[1]:
         raise RuntimeError(f"Aucune donnée pour {indicator} ({countries}). Vérifie le code indicateur.")
-    rows, name = [], payload[1][0]["indicator"]["value"]
+    rows, name, codes = [], payload[1][0]["indicator"]["value"], {}
     for item in payload[1]:
+        codes[item["country"]["value"]] = str(item["country"]["id"]).lower()
         if item["value"] is None:
             continue
         rows.append((item["country"]["value"], int(item["date"]), float(item["value"])))
@@ -31,7 +32,7 @@ def fetch_worldbank(indicator, countries, start, end, out_csv):
         w = csv.writer(f)
         w.writerow(["label", "x", "value"])
         w.writerows(rows)
-    return name, len(rows)
+    return name, len(rows), codes
 
 
 def load_series(csv_path):

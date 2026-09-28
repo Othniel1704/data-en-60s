@@ -11,48 +11,84 @@ logging.getLogger("google_genai").setLevel(logging.ERROR)
 MODELES_SECOURS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.0-flash"]
 TRANSITOIRE = ("503", "429", "500", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "overloaded", "high demand")
 
-IDEAS_PROMPT = """Tu es le rédacteur en chef d'une chaîne de vidéos courtes.
+IDEAS_PROMPT = """Tu es le rédacteur en chef d'une chaîne TikTok / YouTube Shorts francophone qui veut devenir virale.
 Concept de la chaîne :
 {concept}
 
 Sujets déjà traités (ne pas refaire) : {deja}
 
-Propose {n} idées de vidéos. Chaque idée doit reposer sur UN indicateur RÉEL de la Banque mondiale
-(code indicateur exact, ex : SP.POP.TOTL, SP.DYN.LE00.IN, IT.NET.USER.ZS, EG.ELC.ACCS.ZS, NY.GDP.PCAP.CD, SP.URB.TOTL.IN.ZS).
-Varie les thèmes (démographie, énergie, numérique, économie, santé factuelle, éducation, environnement)
-et varie les formats : "line" (courbes, 2 à 5 pays) ou "bar_race" (course de barres, 6 à 10 pays).
+Propose {n} idées de vidéos. Critères, par ordre d'importance :
+1. ENJEU PERSONNEL pour le public : argent, salaires, prix, avenir des jeunes, pays d'origine, fierté, injustice,
+   comparaison avec la France. Une statistique « jolie » sans enjeu ne fait pas de vues.
+2. SURPRISE VÉRIFIABLE : un classement qui se renverse, un pays qui rattrape un autre, un chiffre qui contredit une idée reçue.
+3. DÉBAT EN COMMENTAIRES : le public doit avoir envie d'écrire « et mon pays ? » ou « impossible ».
+
+Varie les formats :
+- "duel" : 2 ou 3 pays face à face (graphique "line")
+- "remontada" : un pays qui rattrape ou dépasse un autre (graphique "line")
+- "classement" : course de barres de 6 à 10 pays, le 1er n'est révélé qu'à la fin (graphique "bar_race")
+- "devine" : la vidéo pose une question, le public doit deviner avant la révélation ("bar_race" ou "line")
+
+Utilise UNIQUEMENT des indicateurs réels de la Banque mondiale, par exemple (code exact) :
+NY.GDP.PCAP.CD (PIB par habitant, $), BX.TRF.PWKR.DT.GD.ZS (argent envoyé par la diaspora, % du PIB),
+BX.TRF.PWKR.CD.DT (argent envoyé par la diaspora, $), IT.NET.USER.ZS (internet, % population),
+IT.CEL.SETS.P2 (abonnements mobiles pour 100 habitants), EG.ELC.ACCS.ZS (accès à l'électricité, %),
+SP.DYN.LE00.IN (espérance de vie, ans), SP.DYN.TFRT.IN (enfants par femme), SP.POP.TOTL (population),
+SP.URB.TOTL.IN.ZS (population urbaine, %), SE.TER.ENRR (études supérieures, %), FP.CPI.TOTL.ZG (inflation, %),
+SL.UEM.1524.ZS (chômage des 15-24 ans, %).
 
 Réponds UNIQUEMENT en JSON : une liste d'objets avec les clés
-"slug" (kebab-case court), "titre", "accroche" (question ou fait choc, 10 mots max), "angle" (pourquoi c'est surprenant),
-"indicateur", "pays" (liste de codes ISO3), "debut" (année), "fin" (année, max {annee_max}), "graphique" ("line" ou "bar_race"),
-"unite" (courte, ex : "habitants", "ans", "% de la population", "$ par habitant")."""
+"slug" (kebab-case court), "titre", "accroche" (5 à 8 mots, affichée en géant dans la 1re image, avec un chiffre si possible),
+"format" ("duel", "remontada", "classement" ou "devine"), "angle" (pourquoi ça va surprendre et faire réagir),
+"indicateur", "pays" (codes ISO3), "debut" (année), "fin" (année, max {annee_max}), "graphique" ("line" ou "bar_race"),
+"unite" (3 caractères max, ex : "ans", "%", "$", ou "" s'il n'y a pas d'unité courte)."""
 
 SCRIPT_PROMPT = """Tu écris la voix off d'un Short vertical pour la chaîne "{chaine}".
 Concept : {concept}
 
 Sujet : {titre}
+Format : {format}
 Angle : {angle}
+Accroche proposée : {accroche}
 Source : Banque mondiale, indicateur "{indicateur_nom}"
 
 DONNÉES RÉELLES (les seuls chiffres autorisés) :
 {resume}
 
-Règles :
-- Français oral, phrases courtes, tutoiement, ton curieux et direct. Pas de tiret cadratin.
-- Entre {mots_min} et {mots_max} mots (la vidéo doit dépasser 1 minute).
-- Les 2 premières secondes = accroche forte (question ou chiffre choc).
-- Utilise UNIQUEMENT les chiffres des données ci-dessus, arrondis de façon naturelle ("presque 30 millions").
-  N'invente aucun chiffre, aucune date, aucune cause non évidente. Si tu expliques une cause, reste prudent ("en partie grâce à...").
-- Structure : accroche, ce que montre le graphique, le moment le plus surprenant, une explication, une question finale au public.
-- Cite la source à la fin en une phrase courte.
+OBJECTIF : que le spectateur ne swipe pas dans les 2 premières secondes, regarde jusqu'au bout et revoie la vidéo.
+
+STRUCTURE OBLIGATOIRE :
+1. ACCROCHE (1re phrase, 12 mots maximum) : un chiffre choc ou une question qui crée un manque.
+   Jamais « Bonjour », jamais « Aujourd'hui on va parler de ».
+2. POINT DE DÉPART (1 phrase courte) : la situation au début du graphique.
+3. MOUVEMENT : dès la 3e phrase, dis « regarde » (ou équivalent) : c'est là que le graphique démarre.
+   Cite ensuite les années dans l'ordre chronologique : le graphique avance quand tu prononces une année.
+4. RÉVÉLATION : le moment le plus surprenant, en une phrase courte et forte.
+5. EXPLICATION prudente en une phrase (« en partie grâce à... »).
+6. FIN EN BOUCLE : la dernière phrase fait écho à l'accroche, pour que la vidéo s'enchaîne naturellement
+   sur son début quand elle recommence. Pas de « abonne-toi », pas de source (elle est affichée à l'écran).
+
+STYLE : français oral, tutoiement, phrases de 4 à 12 mots, rythme rapide, un chiffre fort toutes les 2 ou 3 phrases,
+arrondis naturels (« presque 70 ans »). Écris les années en chiffres. Pas de tiret cadratin.
+Entre {mots_min} et {mots_max} mots. N'invente aucun chiffre, aucune date, aucune cause certaine.
 
 Réponds UNIQUEMENT en JSON avec les clés :
-"texte_ecran" (titre affiché en haut de la vidéo, 8 mots max),
-"narration" (le texte lu),
-"titre_youtube" (moins de 70 caractères, sans clickbait mensonger, avec 1 emoji max),
-"description" (3 à 5 lignes + 5 hashtags à la fin),
-"tags" (liste de 8 à 12 mots-clés),
-"commentaire_epingle" (question pour lancer les commentaires)."""
+"texte_ecran" : l'accroche affichée en géant dans la 1re image puis en titre (5 à 8 mots, avec un chiffre si possible),
+"sous_titre" : ce que mesure le graphique, en français, court (ex : « Espérance de vie à la naissance, 1960-2022 »),
+"narration" : le texte lu,
+"moments" : 2 à 4 repères qui synchronisent le graphique avec la voix. Chaque repère est un objet
+   {{"mot": un mot EXACT de la narration (sans ponctuation) prononcé à l'instant voulu,
+     "annee": l'année que le graphique doit atteindre à ce mot (ou l'année à mettre en valeur si elle est déjà passée),
+     "serie": le pays concerné (facultatif),
+     "texte": un encadré de 6 mots maximum affiché à ce moment (facultatif),
+     "annee_fin": fin d'une période à surligner (facultatif)}}.
+   Le 1er repère est le mot qui lance le mouvement (souvent « regarde ») avec l'année de départ.
+   Mets un "texte" sur le repère de la révélation.
+"ecart" : si la vidéo compare 2 pays, la liste de leurs deux noms, sinon null,
+"titre_youtube" : moins de 70 caractères, fidèle aux données, 1 emoji maximum,
+"description" : 3 à 5 lignes + 5 hashtags à la fin,
+"tags" : liste de 8 à 12 mots-clés,
+"commentaire_epingle" : une question qui donne envie de répondre (ex : « Et ton pays, il serait où ? »)."""
 
 
 def _client():
